@@ -1,89 +1,33 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Thủy cung 3D</title>
+  <title>Thủy Cung 3D</title>
   <style>
-    body { margin:0; overflow:hidden; text-align:center; background:#000; color:#fff; }
-    #aquarium { display:none; }
-    button { padding:10px 20px; font-size:18px; cursor:pointer; }
+    body { margin: 0; overflow: hidden; background: #001f33; }
+    #openBtn {
+      position: absolute; top: 20px; left: 20px;
+      padding: 10px 20px;
+      background: #00bfff; color: white;
+      border: none; border-radius: 8px;
+      cursor: pointer; font-size: 16px;
+      z-index: 10;
+    }
   </style>
 </head>
 <body>
-  <h1 id="title">Thủy cung 3D</h1>
-  <button id="openBtn">Mở thủy cung</button>
-  <div id="aquarium"></div>
+  <button id="openBtn">Mở thủy cung 3D</button>
 
-  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
+  <!-- Thư viện Three.js -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+
   <script>
-    const openBtn = document.getElementById("openBtn");
-    const title = document.getElementById("title");
-    const aquarium = document.getElementById("aquarium");
+    let scene, camera, renderer, fishes = [], bubbles = [], seaweeds = [];
+    let started = false;
 
-    openBtn.addEventListener("click", () => {
-      // Ẩn màn hình chào
-      title.style.display = "none";
-      openBtn.style.display = "none";
-      aquarium.style.display = "block";
+    document.getElementById('openBtn').addEventListener('click', () => {
+      if (started) return;
+      started = true;
+      document.getElementById
 
-      // Bắt đầu dựng cảnh 3D
-      const scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x003366); // nền xanh biển
-
-      const camera = new THREE.PerspectiveCamera(
-        75,
-        window.innerWidth / window.innerHeight,
-        0.1,
-        1000
-      );
-      const renderer = new THREE.WebGLRenderer();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      aquarium.appendChild(renderer.domElement);
-
-      // Ánh sáng
-      const light = new THREE.PointLight(0xffffff, 1, 100);
-      light.position.set(10, 10, 10);
-      scene.add(light);
-
-      // Tạo "cá" (quả cầu nhỏ)
-      const fishes = [];
-      for (let i = 0; i < 15; i++) {
-        const geometry = new THREE.SphereGeometry(0.3, 16, 16);
-        const material = new THREE.MeshStandardMaterial({
-          color: Math.random() * 0xffffff,
-        });
-        const fish = new THREE.Mesh(geometry, material);
-        fish.position.set(
-          (Math.random() - 0.5) * 12,
-          (Math.random() - 0.5) * 6,
-          (Math.random() - 0.5) * 8
-        );
-        scene.add(fish);
-        fishes.push(fish);
-      }
-
-      camera.position.z = 10;
-
-      // Animation
-      function animate() {
-        requestAnimationFrame(animate);
-        fishes.forEach((fish) => {
-          fish.position.x += 0.01 * (Math.random() - 0.5);
-          fish.position.y += 0.01 * (Math.random() - 0.5);
-          fish.rotation.y += 0.02;
-        });
-        renderer.render(scene, camera);
-      }
-      animate();
-
-      // Resize màn hình
-      window.addEventListener("resize", () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-      });
-    });
-  </script>
-</body>
-</html>
 
