@@ -1,33 +1,280 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Thủy Cung 3D</title>
-  <style>
-    body { margin: 0; overflow: hidden; background: #001f33; }
-    #openBtn {
-      position: absolute; top: 20px; left: 20px;
-      padding: 10px 20px;
-      background: #00bfff; color: white;
-      border: none; border-radius: 8px;
-      cursor: pointer; font-size: 16px;
-      z-index: 10;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Realistic Aquarium Tunnel</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #0a2a43, #1a4971);
+        }
+        canvas {
+            display: block;
+            filter: brightness(0.9);
+        }
+        h1 {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #e0f7fa;
+            text-shadow: 0 0 10px rgba(0, 191, 255, 0.8);
+            font-size: 2.5em;
+            font-family: Arial, sans-serif;
+            z-index: 10;
+        }
+        .bubble {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+            animation: bubbleRise 3s infinite ease-in;
+        }
+        @keyframes bubbleRise {
+            0% { transform: translateY(0); opacity: 0.8; }
+            100% { transform: translateY(-100vh) translateX(${Math.random() * 40 - 20}px); opacity: 0; }
+        }
+    </style>
 </head>
 <body>
-  <button id="openBtn">Mở thủy cung 3D</button>
+    <h1>Hành Lang Thủy Cung 3D</h1>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Scene setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
 
-  <!-- Thư viện Three.js -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+        // Camera initial position
+        camera.position.set(0, 1.5, 15);
 
-  <script>
-    let scene, camera, renderer, fishes = [], bubbles = [], seaweeds = [];
-    let started = false;
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+        scene.add(ambientLight);
+        const directionalLight = new THREE.DirectionalLight(0x00b7eb, 0.7);
+        directionalLight.position.set(0, 10, 10);
+        scene.add(directionalLight);
 
-    document.getElementById('openBtn').addEventListener('click', () => {
-      if (started) return;
-      started = true;
-      document.getElementById
+        // Aquarium tunnel (transparent glass walls)
+        const tunnelGeometry = new THREE.BoxGeometry(8, 4, 50);
+        const tunnelMaterial = new THREE.MeshPhysicalMaterial({
+            color: 0x00b7eb,
+            transparent: true,
+            opacity: 0.2,
+            roughness: 0.1,
+            metalness: 0.1,
+            reflectivity: 0.9,
+            side: THREE.DoubleSide
+        });
+        const tunnel = new THREE.Mesh(tunnelGeometry, tunnelMaterial);
+        tunnel.position.y = 1.5;
+        scene.add(tunnel);
+
+        // Floor (sandy bottom)
+        const floorGeometry = new THREE.PlaneGeometry(8, 50);
+        const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x8b6f47, roughness: 0.8 });
+        const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.y = -0.5;
+        scene.add(floor);
+
+        // Seaweed
+        const seaweedGeometry = new THREE.CylinderGeometry(0.1, 0.1, 2, 8);
+        const seaweedMaterial = new THREE.MeshStandardMaterial({ color: 0x2e7d32 });
+        for (let i = 0; i < 10; i++) {
+            const seaweed = new THREE.Mesh(seaweedGeometry, seaweedMaterial);
+            seaweed.position.set((Math.random() - 0.5) * 7, 0.5, (Math.random() - 0.5) * 40);
+            seaweed.rotation.z = Math.random() * 0.2 - 0.1;
+            scene.add(seaweed);
+        }
+
+        // Fish class with detailed model
+        class Fish {
+            constructor() {
+                this.group = new THREE.Group();
+                
+                // Body
+                const bodyGeometry = new THREE.SphereGeometry(0.4, 16, 16);
+                const bodyMaterial = new THREE.MeshPhongMaterial({ 
+                    color: Math.random() * 0x00ff00 + 0x0000ff,
+                    shininess: 100 
+                });
+                const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+                body.scale.set(1.5, 0.8, 0.8);
+                this.group.add(body);
+
+                // Tail
+                const tailGeometry = new THREE.ConeGeometry(0.2, 0.5, 8);
+                const tail = new THREE.Mesh(tailGeometry, bodyMaterial);
+                tail.position.set(-0.6, 0, 0);
+                tail.rotation.y = Math.PI / 2;
+                this.group.add(tail);
+
+                // Fins
+                const finGeometry = new THREE.SphereGeometry(0.2, 8, 8);
+                const finLeft = new THREE.Mesh(finGeometry, bodyMaterial);
+                finLeft.position.set(0, 0, 0.3);
+                finLeft.scale.set(0.5, 0.5, 0.2);
+                this.group.add(finLeft);
+                const finRight = new THREE.Mesh(finGeometry, bodyMaterial);
+                finRight.position.set(0, 0, -0.3);
+                finRight.scale.set(0.5, 0.5, 0.2);
+                this.group.add(finRight);
+
+                this.group.position.set(
+                    (Math.random() - 0.5) * 10,
+                    Math.random() * 3 + 0.5,
+                    (Math.random() - 0.5) * 40
+                );
+                this.speed = new THREE.Vector3(
+                    (Math.random() - 0.5) * 0.05,
+                    (Math.random() - 0.5) * 0.02,
+                    (Math.random() - 0.5) * 0.05
+                );
+                this.tailAngle = 0;
+                this.tailSpeed = Math.random() * 0.1 + 0.05;
+                scene.add(this.group);
+            }
+
+            update() {
+                this.group.position.add(this.speed);
+                this.tailAngle += this.tailSpeed;
+                this.group.children[1].rotation.z = Math.sin(this.tailAngle) * 0.3; // Tail animation
+
+                // Flocking behavior
+                let avgPos = new THREE.Vector3();
+                let count = 0;
+                fishArray.forEach(otherFish => {
+                    if (otherFish !== this) {
+                        const dist = this.group.position.distanceTo(otherFish.group.position);
+                        if (dist < 3) {
+                            avgPos.add(otherFish.group.position);
+                            count++;
+                        }
+                    }
+                });
+                if (count > 0) {
+                    avgPos.divideScalar(count);
+                    this.speed.lerp(new THREE.Vector3().subVectors(avgPos, this.group.position).normalize().multiplyScalar(0.05), 0.1);
+                }
+
+                // Boundary checks
+                if (Math.abs(this.group.position.x) > 6) this.speed.x *= -1;
+                if (this.group.position.y > 4 || this.group.position.y < 0.5) this.speed.y *= -1;
+                if (Math.abs(this.group.position.z) > 20) this.speed.z *= -1;
+
+                // Rotate to face movement direction
+                this.group.lookAt(this.group.position.clone().add(this.speed));
+            }
+        }
+
+        // Create fish
+        const fishArray = [];
+        for (let i = 0; i < 20; i++) {
+            fishArray.push(new Fish());
+        }
+
+        // Create bubbles
+        function createBubble() {
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            const size = Math.random() * 10 + 5;
+            bubble.style.width = `${size}px`;
+            bubble.style.height = `${size}px`;
+            bubble.style.left = `${Math.random() * 100}vw`;
+            bubble.style.bottom = '0';
+            bubble.style.animationDuration = `${Math.random() * 2 + 2}s`;
+            document.body.appendChild(bubble);
+            setTimeout(() => bubble.remove(), 3000);
+        }
+        setInterval(createBubble, 150);
+
+        // Movement controls
+        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+        const velocity = new THREE.Vector3();
+        const direction = new THREE.Vector3();
+        let mouseX = 0, mouseY = 0;
+
+        // Pointer lock for mouse
+        document.addEventListener('click', () => {
+            document.body.requestPointerLock();
+        });
+
+        document.addEventListener('mousemove', (event) => {
+            if (document.pointerLockElement === document.body) {
+                mouseX -= event.movementX * 0.002;
+                mouseY -= event.movementY * 0.002;
+                mouseY = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, mouseY));
+                camera.rotation.set(mouseY, mouseX, 0);
+            }
+        });
+
+        // Keyboard controls
+        document.addEventListener('keydown', (event) => {
+            switch (event.code) {
+                case 'KeyW': moveForward = true; break;
+                case 'KeyS': moveBackward = true; break;
+                case 'KeyA': moveLeft = true; break;
+                case 'KeyD': moveRight = true; break;
+            }
+        });
+
+        document.addEventListener('keyup', (event) => {
+            switch (event.code) {
+                case 'KeyW': moveForward = false; break;
+                case 'KeyS': moveBackward = false; break;
+                case 'KeyA': moveLeft = false; break;
+                case 'KeyD': moveRight = false; break;
+            }
+        });
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Update fish
+            fishArray.forEach(fish => fish.update());
+
+            // Movement
+            direction.z = Number(moveForward) - Number(moveBackward);
+            direction.x = Number(moveRight) - Number(moveLeft);
+            direction.normalize();
+
+            velocity.z = direction.z * 0.1;
+            velocity.x = direction.x * 0.1;
+
+            // Move camera
+            const forward = new THREE.Vector3();
+            camera.getWorldDirection(forward);
+            forward.y = 0;
+            forward.normalize();
+            const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0));
+
+            camera.position.addScaledVector(forward, velocity.z);
+            camera.position.addScaledVector(right, velocity.x);
+
+            // Keep camera within tunnel
+            camera.position.x = Math.max(-3.5, Math.min(3.5, camera.position.x));
+            camera.position.z = Math.max(-20, Math.min(20, camera.position.z));
+            camera.position.y = 1.5;
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
 
 
